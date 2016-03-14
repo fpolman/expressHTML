@@ -12,7 +12,28 @@ var users = require('./routes/users');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
+//mongodb met mongoose
+var mongoose = require('mongoose/');
+
+mongoose.connect('mongodb://localhost/MyDatabase');
+
 var app = express();
+
+
+//mongoose schema
+var Schema = mongoose.Schema;
+var UserDetail = new Schema({
+      username: String,
+      password: String
+    }, {
+      collection: 'userInfo'
+    });
+var UserDetails = mongoose.model('userInfo', UserDetail);
+
+
+
+
+
 
 // view engine setup
 //app.set('views', path.join(__dirname, 'views'));
@@ -48,8 +69,40 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', routes);
 app.use('/users', users);
+
+app.post('/login',
+  passport.authenticate('local', {
+    successRedirect: '/loginSuccess',
+    failureRedirect: '/loginFailure'
+  })
+);
+
+app.get('/loginFailure', function(req, res, next) {
+  res.send('Failed to authenticate');
+});
+
+app.get('/loginSuccess', function(req, res, next) {
+  res.send('Successfully authenticated');
+});
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.use(new LocalStrategy(function(username, password, done) {
+  process.nextTick(function() {
+    // Auth Check Logic
+  });
+}));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
